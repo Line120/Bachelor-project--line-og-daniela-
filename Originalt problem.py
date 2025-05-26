@@ -1,17 +1,20 @@
 import numpy as np
 import gurobipy as gp
 from gurobipy import Model, quicksum, GRB
+import time
 
 
-file_path = "C:/Users/linef/Documents/Bachelor projektet/Datasæt/J_V3_C8.txt"
+# start tidtagning
+start_tid = time.time()
 
+fil_sti = "C:/Users/linef/Documents/Bachelor projektet/Datasæt/P-n14-k4.txt"
 
 # Opret ny model
 m = gp.Model()
 
 
 # Åbn filen og læs linjerne
-with open(file_path, "r") as file:
+with open(fil_sti, "r") as file:
    lines = file.readlines()
 
 
@@ -50,7 +53,7 @@ for line in lines:
    # Læs køretøjers data
    if reading_vehicles and not line.startswith("VEH. NO."):
        liste = line.split()
-       bilnr = chr(97 + int(liste[0]))  # a, b, c, ...
+       bilnr = f"b{int(liste[0])}"
        biler[bilnr] = (int(liste[1]), int(liste[2]))
        kapacitet = int(liste[3])
        Q_k[bilnr] = int(liste[4])
@@ -104,26 +107,9 @@ K = list(biler.keys())
 P = list(personer.keys())
 
 
-# Udskriv resultatet - hvis man vil
-print("Personer:", personer)
-print("Biler:", biler)
-print("Slutdestination:", slutdestination)
-print("Indeks-mængder:", I, J, K, P)
-print("Omsætning:", omsætning)
-print("Q:", Q)
-print("Q_k:", Q_k)
-print("A_i:", A_i)
-print("A_k:", A_k)
-print("T_U:", T_U)
-
-
-
-
 # Opret variabler x_ij^k
 x = m.addVars(I, J, K, vtype=GRB.BINARY, name="x")
 q = m.addVars(set(P) | set(K), vtype=gp.GRB.INTEGER, name="q")
-
-
 
 
 # Definerer T_lj
@@ -134,7 +120,7 @@ for i in set(K) | (set(P)):
 
 
 # Definer koefficienter
-coeffs = {
+koeffs = {
    (i, j, k): C_ij[(i, j)] - omsætning[i] if i in P else C_ij[(i, j)]
    for i, j in C_ij
    for k in K
@@ -142,11 +128,11 @@ coeffs = {
 
 
 # Definer objektfunktionen
-objective = gp.quicksum(coeffs[i, j, k] * x[i, j, k] for i, j, k in coeffs)
+objektfkt = gp.quicksum(koeffs[i, j, k] * x[i, j, k] for i, j, k in koeffs)
 
 
 # Sæt objektfunktionen i modellen
-m.setObjective(objective, GRB.MINIMIZE)
+m.setObjective(objektfkt, GRB.MINIMIZE)
 
 
 # Tilføj bibetingelser
@@ -204,9 +190,9 @@ for i in P:
 
 #bb. 4l:
 for i in I:
-   max_value = min(len(P), max(Q - Q_k[k] for k in K))
+   max_værdi = min(len(P), max(Q - Q_k[k] for k in K))
    m.addConstr(q[i] >= 0)
-   m.addConstr(q[i] <= max_value)
+   m.addConstr(q[i] <= max_værdi)
 
 
 #bb. 4m:
@@ -217,13 +203,28 @@ for i in I:
                m.addConstr(x[i, j, k] == 0)
 
 
-# Løs det!
+# Løs modellen
 m.optimize()
+print(f"Gurobi løsningstid: {m.Runtime:.5f} sekunder")
 
 
-print(f"Optimal funktionsværdi: {m.objVal}")
+
+
+print(f"Optimal funktionsværdi: {round(m.objVal)}")
 for i in I:
-       for j in J:
-           for k in K:
-               if x[i, j, k].X == 1:
-                   print(f"Værdi af x_{i}{j}^{k}: {x[i, j, k].X}")
+   for j in J:
+       for k in K:
+           if x[i, j, k].X == 1:
+               print(f"Værdi af x_{i},{j}^{k}: {x[i, j, k].X}")
+
+
+# Slut tidtagning
+slut_tid = time.time()
+
+
+# Beregn tid brugt
+tid_brugt = slut_tid - start_tid
+
+
+# Udskriv den tid, der blev brugt
+print(f"Tid: {tid_brugt:.5f} sekunder")
