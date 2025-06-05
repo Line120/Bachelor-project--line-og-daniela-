@@ -7,7 +7,7 @@ from gurobipy import Model, GRB, quicksum
 
 # Start tidtagning
 start_tid = time.time()
-gurobi_tid = 0  # Variabel til at akkumulere Gurobi-løsningstid
+gurobi_tid = 0  
 
 
 fil_sti = "C:/Users/linef/Documents/Bachelor projektet/Datasæt/J_V2_C4.txt"
