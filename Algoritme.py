@@ -117,7 +117,7 @@ def initialle_kolonner(biler, personer, slutdestination, Q):
                min_ank_tid_personer = min(personer[i]["ankomst_tid"] for i in perm)
                min_ank_tid = min(min_ank_tid_personer, v["ankomst_tid"])
                if samlede_tid <= min_ank_tid:
-                   kolonner[(k, perm)] = (samlede_tid, omsaetning)  # brugte samlet_tid, ikke omkostning
+                   kolonner[(k, perm)] = (samlede_tid, omsaetning)  
    return kolonner
 
 
@@ -127,7 +127,7 @@ def RMP(kolonner, biler, personer):
    model.setParam('OutputFlag', 0)
 
 
-   lambda_wk = model.addVars(kolonner.keys(), vtype=GRB.CONTINUOUS)  # rettet fra cols.keys()
+   lambda_wk = model.addVars(kolonner.keys(), vtype=GRB.CONTINUOUS)  
 
 
    model.setObjective(
@@ -205,7 +205,7 @@ def subproblem(k, biler, personer, slutdestination, beta, alpha_k):
        sp.addConstr(x[i, i] == 0)
 
 
-   # Mål gurobi tid for subproblem.optimize()
+   # gurobi tid for subproblem.optimize()
    t0 = time.time()
    sp.optimize()
    gurobi_tid += time.time() - t0
@@ -244,7 +244,7 @@ def kolonne_generering():
 
    while True:
        iteration += 1
-       # Mål gurobi tid for model.optimize()
+       # gurobi tid for model.optimize()
        t0 = time.time()
        model.optimize()
        gurobi_tid += time.time() - t0
@@ -288,7 +288,7 @@ def kolonne_generering():
        ip.addConstr(quicksum(y[k_w] for k_w in kolonner if i in k_w[1]) <= 1)
 
 
-   # Mål gurobi tid for ip.optimize()
+   # gurobi tid for ip.optimize()
    t0 = time.time()
    ip.optimize()
    gurobi_tid += time.time() - t0
